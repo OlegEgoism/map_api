@@ -7,6 +7,7 @@ import time
 from datetime import date
 from datetime import datetime
 
+from openpyxl.styles import PatternFill
 from openpyxl.utils import get_column_letter
 
 token_file = 'token.txt'
@@ -91,8 +92,8 @@ def wrtie_info_in_file_xls_pack(result):
     """Запись данных в выходные файлы xls"""
     workbook = load_workbook("outpack.xlsx")  # ---- Запись данных в файл outpack.xlsx
     date_today = datetime.now().strftime('%Y-%m-%d')  # "Дата сверки"
-    sheet = workbook.create_sheet(date_today)
-    # Название столбцов
+    # sheet = workbook.create_sheet(date_today)  #  Если необходимо создание дополнительных страниц
+    sheet = workbook.active
     sheet["A1"] = "Дата сверки"
     sheet["B1"] = "Название"
     sheet["C1"] = "Адрес организации"
@@ -106,6 +107,9 @@ def wrtie_info_in_file_xls_pack(result):
     sheet.column_dimensions['D'].width = 60
     sheet.column_dimensions['E'].width = 100
     sheet.column_dimensions['F'].width = 16
+
+    for column in range(1, 7):
+        sheet.cell(row=1, column=column).fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
 
     index = 2
     for key, value in result.items():
