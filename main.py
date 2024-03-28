@@ -1,21 +1,19 @@
+import time
+
 import requests
 import os
 import json
-import csv
+from openpyxl.styles import PatternFill, Font
 from openpyxl import load_workbook
-import time
 from datetime import date
 from datetime import datetime
-
-from openpyxl.styles import PatternFill
-from openpyxl.utils import get_column_letter
 
 token_file = 'token.txt'
 input_file = 'input.xlsx'
 
 
 def check_file(name_file):
-    """Проверка наличия файлов input.xlsx и token.txt"""
+    """Проверка на наличие файлов input.xlsx и token.txt"""
     if os.path.isfile(name_file):
         check = True
     else:
@@ -72,27 +70,10 @@ def filter_fgbu_fkp(check_txt):
         return None
 
 
-# def get_num_of_str(str_adr):
-#     """Извлечь из строки адреса (номер дома, здания)"""
-#     length = len(str_adr)
-#     integers = []
-#     i = 0  # индекс текущего символа
-#     while i < length:
-#         s_int = ''  # строка для нового числа
-#         while i < length and '0' <= str_adr[i] <= '9':
-#             s_int += str_adr[i]
-#             i += 1
-#         i += 1
-#         if s_int != '':
-#             integers.append(int(s_int))
-#     return integers
-
-
 def wrtie_info_in_file_xls_pack(result):
     """Запись данных в выходные файлы xls"""
     workbook = load_workbook("outpack.xlsx")  # ---- Запись данных в файл outpack.xlsx
     date_today = datetime.now().strftime('%Y-%m-%d')  # "Дата сверки"
-    # sheet = workbook.create_sheet(date_today)  #  Если необходимо создание дополнительных страниц
     sheet = workbook.active
     sheet["A1"] = "Дата сверки"
     sheet["B1"] = "Название"
@@ -100,36 +81,35 @@ def wrtie_info_in_file_xls_pack(result):
     sheet["D1"] = "Название организации"
     sheet["E1"] = "Контактные данные"
     sheet["F1"] = "ID организации"
-    # Установка ширины столбцов
-    sheet.column_dimensions['A'].width = 12
-    sheet.column_dimensions['B'].width = 60
-    sheet.column_dimensions['C'].width = 60
-    sheet.column_dimensions['D'].width = 60
-    sheet.column_dimensions['E'].width = 100
+    sheet.column_dimensions['A'].width = 13
+    sheet.column_dimensions['B'].width = 50
+    sheet.column_dimensions['C'].width = 50
+    sheet.column_dimensions['D'].width = 50
+    sheet.column_dimensions['E'].width = 80
     sheet.column_dimensions['F'].width = 16
-    # # Применение "FFFF00" цвета к столбцам
-    # for column in range(1, 7):
-    #     sheet.cell(row=1, column=column).fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    for column in range(1, 7):
+        sheet.cell(row=1, column=column).font = Font(bold=True)  # Установка жирного шрифта для названий столбцов
+    for column in range(1, 7):
+        sheet.cell(row=1, column=column).fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Применение цвета к столбцам
 
     index = 2
     for key, value in result.items():
         if type(value) == list:
             for v in value:
                 property = v.get('properties')  # Все данные в json
-                print("-------", property.get("CompanyMetaData"))
                 company_metadata = property.get("CompanyMetaData")
                 description = property.get("description")  # "Название"
                 address = company_metadata.get('address')  # "Адрес организации"
                 name = property.get('name')  # "Название организации"
                 contact_email = company_metadata.get('url')  # "Контактные данные"
-                # if contact_email == None:
-                #     contact_email = ''
+                if contact_email == None:
+                    contact_email = ''
                 contact_phone = company_metadata.get('Phones')
                 if contact_phone is not None:
                     phone_numbers_string = ''
                     for phone in contact_phone:
                         phone_number = phone.get('formatted')
-                        phone_numbers_string += f"{phone_number} | "
+                        phone_numbers_string += f"{phone_number}"
                     phone_numbers_info = phone_numbers_string[:-2]  # "Контактные данные"
                 else:
                     phone_numbers_info = ''
@@ -138,35 +118,26 @@ def wrtie_info_in_file_xls_pack(result):
                 else:
                     contact_work_time = ''
                 id_yandex = company_metadata.get('id')  # "ID организации"
-                # Запись данных
                 sheet.cell(row=index, column=1, value=date_today)  # "Дата сверки"
                 sheet.cell(row=index, column=2, value=description)  # "Название"
                 sheet.cell(row=index, column=3, value=address)  # "Адрес организации"
                 sheet.cell(row=index, column=4, value=name)  # "Название организации"
-                sheet.cell(row=index, column=5, value=f'{contact_email} | {phone_numbers_info} | {contact_work_time}')  # "Контактные данные"
+                sheet.cell(row=index, column=5, value=f'{contact_email} {phone_numbers_info} {contact_work_time}')  # "Контактные данные"
                 sheet.cell(row=index, column=6, value=id_yandex)  # "ID организации"
                 index += 1
-
     workbook.save("outpack.xlsx")
-
 
 
 def get_info_api(token, list_adr):
     ''' Получения данных с API Поиска по организациям'''
     for adr in list_adr:
-        # time.sleep(1)  # Задержка в 1 секунду
         url = 'https://search-maps.yandex.ru/v1/?text={}&type=biz&results=50&lang=ru_RU&apikey={}'.format(adr, token)
         res = requests.get(url)
         contents = res.text
         result = json.loads(contents)
-        # print(result)
+        print(result)
         result['input_adr'] = adr
-        # Запись нефильтрованных, всех данных
         wrtie_info_in_file_xls_pack(result)
-        # # Запись в csv файл
-        # write_in_folder_and_file_csv(result)
-        # # Тестовая выдача
-        # write_in_folder_and_file_csv_test(result)
 
 
 if __name__ == '__main__':
@@ -180,4 +151,3 @@ if __name__ == '__main__':
     get_info_api(token, adr_list)
     # wrtie_info_in_file()
     show_data_now()
-
