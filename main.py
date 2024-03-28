@@ -92,6 +92,41 @@ def wrtie_info_in_file_xls_pack(result):
     for column in range(1, 7):
         sheet.cell(row=1, column=column).fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Применение цвета к столбцам
 
+    # index = 2
+    # for key, value in result.items():
+    #     if type(value) == list:
+    #         for v in value:
+    #             property = v.get('properties')  # Все данные в json
+    #             company_metadata = property.get("CompanyMetaData")
+    #             description = property.get("description")  # "Название"
+    #             address = company_metadata.get('address')  # "Адрес организации"
+    #             name = property.get('name')  # "Название организации"
+    #             contact_email = company_metadata.get('url')  # "Контактные данные"
+    #             if contact_email == None:
+    #                 contact_email = ''
+    #             contact_phone = company_metadata.get('Phones')
+    #             if contact_phone is not None:
+    #                 phone_numbers_string = ''
+    #                 for phone in contact_phone:
+    #                     phone_number = phone.get('formatted')
+    #                     phone_numbers_string += f"{phone_number}"
+    #                 phone_numbers_info = phone_numbers_string[:-2]  # "Контактные данные"
+    #             else:
+    #                 phone_numbers_info = ''
+    #             if company_metadata.get('Hours') is not None:
+    #                 contact_work_time = company_metadata.get('Hours').get('text')  # "Контактные данные"
+    #             else:
+    #                 contact_work_time = ''
+    #             id_yandex = company_metadata.get('id')  # "ID организации"
+    #             sheet.cell(row=index, column=1, value=date_today)  # "Дата сверки"
+    #             sheet.cell(row=index, column=2, value=description)  # "Название"
+    #             sheet.cell(row=index, column=3, value=address)  # "Адрес организации"
+    #             sheet.cell(row=index, column=4, value=name)  # "Название организации"
+    #             sheet.cell(row=index, column=5, value=f'{contact_email} {phone_numbers_info} {contact_work_time}')  # "Контактные данные"
+    #             sheet.cell(row=index, column=6, value=id_yandex)  # "ID организации"
+    #             index += 1
+
+
     index = 2
     for key, value in result.items():
         if type(value) == list:
@@ -101,8 +136,12 @@ def wrtie_info_in_file_xls_pack(result):
                 description = property.get("description")  # "Название"
                 address = company_metadata.get('address')  # "Адрес организации"
                 name = property.get('name')  # "Название организации"
+                if "ФГБУ" in name or "ФКП" in name:
+                    continue  # Пропустить запись, если слова "ФГБУ" или "ФКП" есть в "Название организации"
+                if "ФГБУ" in description or "ФКП" in description:
+                    continue  # Пропустить запись, если слова "ФГБУ" или "ФКП" есть в "Название"
                 contact_email = company_metadata.get('url')  # "Контактные данные"
-                if contact_email == None:
+                if contact_email is None:
                     contact_email = ''
                 contact_phone = company_metadata.get('Phones')
                 if contact_phone is not None:
@@ -125,6 +164,7 @@ def wrtie_info_in_file_xls_pack(result):
                 sheet.cell(row=index, column=5, value=f'{contact_email} {phone_numbers_info} {contact_work_time}')  # "Контактные данные"
                 sheet.cell(row=index, column=6, value=id_yandex)  # "ID организации"
                 index += 1
+
     workbook.save("outpack.xlsx")
 
 
