@@ -1,5 +1,5 @@
-import requests
 import os
+import requests
 import json
 from openpyxl.styles import PatternFill, Font
 from openpyxl import load_workbook
@@ -121,7 +121,6 @@ def wrtie_info_in_file_xls_pack(results):
                     sheet.cell(row=index, column=6, value=id_yandex)  # "ID организации"
                     index += 1
                     print(id_yandex, '----', property)
-
     workbook.save("outpack.xlsx")
 
 
