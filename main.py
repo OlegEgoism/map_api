@@ -67,17 +67,21 @@ def wrtie_info_in_file_xls_pack(results):
     sheet["B1"] = "Название"
     sheet["C1"] = "Адрес организации"
     sheet["D1"] = "Название организации"
-    sheet["E1"] = "Контактные данные"
-    sheet["F1"] = "ID организации"
+    sheet["E1"] = "Сайт"
+    sheet["F1"] = "Телефон "
+    sheet["G1"] = "Время работы"
+    sheet["H1"] = "ID организации"
     sheet.column_dimensions['A'].width = 13
     sheet.column_dimensions['B'].width = 50
     sheet.column_dimensions['C'].width = 50
     sheet.column_dimensions['D'].width = 50
-    sheet.column_dimensions['E'].width = 80
-    sheet.column_dimensions['F'].width = 16
-    for column in range(1, 7):
+    sheet.column_dimensions['E'].width = 30
+    sheet.column_dimensions['F'].width = 30
+    sheet.column_dimensions['G'].width = 30
+    sheet.column_dimensions['H'].width = 16
+    for column in range(1, 9):
         sheet.cell(row=1, column=column).font = Font(bold=True)  # Установка жирного шрифта для названий столбцов
-    for column in range(1, 7):
+    for column in range(1, 9):
         sheet.cell(row=1, column=column).fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Применение цвета к столбцам
 
     index = 2
@@ -117,8 +121,10 @@ def wrtie_info_in_file_xls_pack(results):
                     sheet.cell(row=index, column=2, value=filtered_name)  # "Название"
                     sheet.cell(row=index, column=3, value=address)  # "Адрес организации"
                     sheet.cell(row=index, column=4, value=name)  # "Название организации"
-                    sheet.cell(row=index, column=5, value=f'{contact_email} {phone_numbers_info} {contact_work_time}')  # "Контактные данные"
-                    sheet.cell(row=index, column=6, value=id_yandex)  # "ID организации"
+                    sheet.cell(row=index, column=5, value=contact_email)  # "Сайт"
+                    sheet.cell(row=index, column=6, value=phone_numbers_info)  # "Телефон"
+                    sheet.cell(row=index, column=7, value=contact_work_time)  # "Время работы"
+                    sheet.cell(row=index, column=8, value=id_yandex)  # "ID организации"
                     index += 1
                     print(id_yandex, '----', property)
     workbook.save("outpack.xlsx")
