@@ -59,9 +59,7 @@ def get_input_adr(name_file):
 
 
 def wrtie_info_in_file_xls_pack(results):
-    """Запись данных в выходные файлы xls"""
-    workbook = load_workbook("outpack.xlsx")  # ---- Запись данных в файл outpack.xlsx
-    date_today = datetime.now().strftime('%Y-%m-%d')  # "Дата сверки"
+    workbook = load_workbook("outpack.xlsx")  # Загрузка книги
     sheet = workbook.active
     sheet["A1"] = "Дата сверки"
     sheet["B1"] = "Название"
@@ -85,49 +83,44 @@ def wrtie_info_in_file_xls_pack(results):
         sheet.cell(row=1, column=column).fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Применение цвета к столбцам
 
     index = 2
-    for adr, result in results.items():  # Перебираем результаты из словаря
-        for key, value in result.items():
-            if type(value) == list:
-                for v in value:
-                    property = v.get('properties')  # Все данные в json
-                    company_metadata = property.get("CompanyMetaData")
-                    description = property.get("description")  # "Название"
-                    address = company_metadata.get('address')  # "Адрес организации"
-                    name = property.get('name')  # "Название организации"
-                    if any(filter_word in name for filter_word in [name_filter_one, name_filter_two, name_filter_three, name_filter_four, name_filter_five]):
-                        filtered_name = name
-                    else:
-                        filtered_name = ''  # Если имя не соответствует ни одному фильтру, установите для него пустую строку.
-                    if company_metadata.get('url') is None:
-                        contact_email = ''
-                    else:
-                        contact_email = company_metadata.get('url')  # "Контактные данные"
-                    contact_phone = company_metadata.get('Phones')
-                    if contact_phone is not None:
-                        phone_numbers_string = ''
-                        for phone in contact_phone:
-                            phone_number = phone.get('formatted')
-                            phone_numbers_string += f"{phone_number}"
-                        phone_numbers_info = phone_numbers_string[:-2]  # "Контактные данные"
-                    else:
-                        phone_numbers_info = ''
-                    if company_metadata.get('Hours') is not None:
-                        contact_work_time = company_metadata.get('Hours').get('text')  # "Контактные данные"
-                    else:
-                        contact_work_time = ''
-                    id_yandex = company_metadata.get('id')  # "ID организации"
-                    sheet.cell(row=index, column=1, value=date_today)  # "Дата сверки"
-                    # sheet.cell(row=index, column=2, value=description)  # "Название"
-                    sheet.cell(row=index, column=2, value=filtered_name)  # "Название"
-                    sheet.cell(row=index, column=3, value=address)  # "Адрес организации"
-                    sheet.cell(row=index, column=4, value=name)  # "Название организации"
-                    sheet.cell(row=index, column=5, value=contact_email)  # "Сайт"
-                    sheet.cell(row=index, column=6, value=phone_numbers_info)  # "Телефон"
-                    sheet.cell(row=index, column=7, value=contact_work_time)  # "Время работы"
-                    sheet.cell(row=index, column=8, value=id_yandex)  # "ID организации"
-                    index += 1
-                    print(id_yandex, '----', property)
-    workbook.save("outpack.xlsx")
+    for adr, result in results.items():
+        result_name_info = result.get('properties').get('ResponseMetaData').get('SearchRequest').get('request')
+
+        for item in result.get('features'):
+            property = item.get('properties')  # Извлечение свойств
+            company_metadata = property.get("CompanyMetaData")
+            address = company_metadata.get('address')  # "Адрес организации"
+            name = property.get('name')  # "Название организации"
+            if company_metadata.get('url') is None:
+                contact_email = ''
+            else:
+                contact_email = company_metadata.get('url')  # "Сайт"
+            contact_phone = company_metadata.get('Phones')
+            if contact_phone is not None:
+                phone_numbers_string = ''
+                for phone in contact_phone:
+                    phone_number = phone.get('formatted')
+                    phone_numbers_string += f"{phone_number}"
+                phone_numbers_info = phone_numbers_string[:-2]  # "Телефон"
+            else:
+                phone_numbers_info = ''
+            if company_metadata.get('Hours') is not None:
+                contact_work_time = company_metadata.get('Hours').get('text')  # "Время работы"
+            else:
+                contact_work_time = ''
+            id_yandex = company_metadata.get('id')  # "ID организации"
+
+            sheet.cell(row=index, column=1, value=datetime.now().strftime('%Y-%m-%d'))  # "Дата сверки"
+            sheet.cell(row=index, column=2, value=result_name_info)  # "Название"
+            sheet.cell(row=index, column=3, value=address)  # "Адрес организации"
+            sheet.cell(row=index, column=4, value=name)  # "Название организации"
+            sheet.cell(row=index, column=5, value=contact_email)  # "Сайт"
+            sheet.cell(row=index, column=6, value=phone_numbers_info)  # "Телефон"
+            sheet.cell(row=index, column=7, value=contact_work_time)  # "Время работы"
+            sheet.cell(row=index, column=8, value=id_yandex)  # "ID организации"
+            index += 1
+
+    workbook.save("outpack.xlsx")  # Сохранение книги
 
 
 def get_info_api(token, list_adr):
@@ -138,7 +131,8 @@ def get_info_api(token, list_adr):
         res = requests.get(url)
         contents = res.text
         result = json.loads(contents)
-        print(result)
+        result_name_info = result.get('properties').get('ResponseMetaData').get('SearchRequest').get('request')
+        print(result_name_info)
         result['input_adr'] = adr
         results_to_write[adr] = result  # Сохраняем результаты в словарь
     wrtie_info_in_file_xls_pack(results_to_write)  # После завершения цикла записываем результаты в файл
